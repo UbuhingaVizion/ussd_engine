@@ -1,0 +1,16 @@
+pip-tools
+gunicorn
+sphinx
+#ipdb
+ipython
+twine
+simplekv
+structlog
+Jinja2
+PyYAML
+requests
+configure-fork
+attrs
+marshmallow
+celery
+PyStaticConfiguration
