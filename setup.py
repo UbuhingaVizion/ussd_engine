@@ -5,22 +5,24 @@ from os import path
 
 
 def _strip_comments(l):
-    return l.split('#', 1)[0].strip()
+    return l.split("#", 1)[0].strip()
 
 
 def _pip_requirement(req):
-    if req.startswith('-r '):
+    if req.startswith("-r "):
         _, path = req.split()
-        return reqs(*path.split('/'))
+        return reqs(*path.split("/"))
     return [req]
 
 
 def _reqs(*f):
     return [
-        _pip_requirement(r) for r in (
-            _strip_comments(l) for l in open(
-                os.path.join(os.getcwd(), *f)).readlines()
-        ) if r]
+        _pip_requirement(r)
+        for r in (
+            _strip_comments(l) for l in open(os.path.join(os.getcwd(), *f)).readlines()
+        )
+        if r
+    ]
 
 
 def reqs(*f):
@@ -35,21 +37,21 @@ def reqs(*f):
 
 
 this_directory = path.abspath(path.dirname(__file__))
-with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
+with open(path.join(this_directory, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
 setup(
-    name='ussd_airflow_engine',
+    name="ussd_engine",
     version=VERSION,
-    packages=find_packages(exclude=('ussd_airflow',)),
-    url='https://github.com/ussd-airflow/ussd_engine',
-    install_requires=reqs('default.txt'),
+    packages=find_packages(exclude=("ussd_airflow",)),
+    url="https://github.com/UbuhingaVizion/ussd_engine",
+    # install_requires=reqs('default.txt'),
     include_package_data=True,
-    license='MIT',
-    author='Mwas',
+    license="MIT",
+    author="Mwas",
     maintainer="mwas",
-    author_email='mwasgize@gmail.com',
-    description='Ussd Airflow Library',
+    author_email="mwasgize@gmail.com",
+    description="Ussd Airflow Library",
     long_description=long_description,
-    long_description_content_type='text/markdown'
+    long_description_content_type="text/markdown",
 )
