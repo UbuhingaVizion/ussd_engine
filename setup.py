@@ -41,7 +41,7 @@ with open(path.join(this_directory, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
 setup(
-    name="ussd_engine",
+    name="ussd_airflow_engine",
     version=VERSION,
     packages=find_packages(exclude=("ussd_airflow",)),
     url="https://github.com/UbuhingaVizion/ussd_engine",
