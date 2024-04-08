@@ -1,4 +1,5 @@
 import time
+
 from ussd.core import UssdEngine, UssdRequest
 
 if __name__ == "__main__":
@@ -10,7 +11,7 @@ if __name__ == "__main__":
 
     while not is_last:
         try:
-            message = input("Enter a message: ")
+            message = input(">>>> : ")
 
             ussd_request = UssdRequest(
                 session_id=session_id,
@@ -24,7 +25,7 @@ if __name__ == "__main__":
 
             dispatched_ussd = ussd_engine.ussd_dispatcher()
 
-            print(dispatched_ussd.text)
+            print(getattr(dispatched_ussd, "text", ""))
             # print(dispatched_ussd.status)
 
             if dispatched_ussd.status is False:

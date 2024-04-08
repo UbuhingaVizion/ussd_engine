@@ -1,8 +1,11 @@
-from ussd.core import UssdHandlerAbstract
-from ussd.screens.schema import UssdBaseScreenSchema, NextUssdScreenSchema, PaginationConfigSchema
-from ussd.graph import Vertex, Link
 import typing
+
+import configure
 from marshmallow import Schema, fields, validate
+
+from ussd.core import UssdHandlerAbstract
+from ussd.graph import Link, Vertex
+from ussd.screens.schema import NextUssdScreenSchema, PaginationConfigSchema, UssdBaseScreenSchema
 
 
 class VariableDefinitionSchema(Schema):
@@ -60,22 +63,22 @@ class InitialScreen(UssdHandlerAbstract):
                     namespace: used_to_save_the_variable
     Sometimes you want to send ussd session to some 3rd party application when
     the session has been terminated.
-    
+
     We can easily do that at end of session i.e quit screen, But for those
-    scenarios where session is terminated by user or mno we don't know that 
-    unless the mno send us a request. 
-    
+    scenarios where session is terminated by user or mno we don't know that
+    unless the mno send us a request.
+
     Most mnos don't send notifier 3rd party application about the session being
-    dropped. The work around we use is schedule celery task to run after 
+    dropped. The work around we use is schedule celery task to run after
     15 minutes ( by that time we know there is no active session)
-    
+
     Below is an example of how to schedule a ussd report session after 15min
-        
-    
+
+
     example:
-        
+
         .. code-block:: yaml
-        
+
             initial_screen:
                 type: initial_screen
                 next_screen: screen_one
@@ -94,75 +97,76 @@ class InitialScreen(UssdHandlerAbstract):
                     async_parameters:
                         queue: report_session
                         countdown: 900
-                    
-        
+
+
         Lets explain the variables in ussd_report_session
             - session_key ( Mandatory )
                 response of ussd report session would be saved under that key
                 in session store
-                
+
             - request_conf ( Mandatory )
-                Those are the parameters to be used to make request to 
+                Those are the parameters to be used to make request to
                 report ussd session
-            
+
             - validate_response ( Mandatory )
-                After making ussd report request the framework will evaluate 
-                your options and if one of them is valid it would 
-                mark session as posted (This is used to avoid double ussd 
+                After making ussd report request the framework will evaluate
+                your options and if one of them is valid it would
+                mark session as posted (This is used to avoid double ussd
                 submission)
-                
+
             - retry_mechanism ( Optional )
-                After validating your response and all of them fail 
-                we will go ahead and retry if this field is active. 
-                
+                After validating your response and all of them fail
+                we will go ahead and retry if this field is active.
+
             - async_parameters ( Optional )
                 This is are the parameters used to make ussd request
-            
-            
-                
+
+
+
     """
+
     screen_type = "initial_screen"
 
     serializer = InitialScreenSchema
 
     def get_next_screens(self) -> typing.List[Link]:
-        next_screens = self.screen_content['next_screen']
-        return [Link(Vertex(self.handler), Vertex(next_screens, ''), "")]
+        next_screens = self.screen_content["next_screen"]
+        return [Link(Vertex(self.handler), Vertex(next_screens, ""), "")]
 
     def show_ussd_content(self):
         return ""
 
     def handle(self):
+        if isinstance(self.screen_content, configure.Configuration):
+            # Added configure object data conversion to dict
+            # to avoid an error jumping the if below
+            self.screen_content = dict(self.screen_content)
 
         if isinstance(self.screen_content, dict):
-
             # create ussd variables defined int the yaml
             self.create_variables()
 
             # set default language
             self.set_language()
 
-            next_screen = self.screen_content['next_screen']
+            next_screen = self.screen_content["next_screen"]
 
             # call report session
-            if self.screen_content.get('ussd_report_session'):
-                self.fire_ussd_report_session_task(self.initial_screen,
-                                                   self.ussd_request.session_id
-                                                   )
+            if self.screen_content.get("ussd_report_session"):
+                self.fire_ussd_report_session_task(
+                    self.initial_screen, self.ussd_request.session_id
+                )
         else:
             next_screen = self.screen_content
         return self.route_options(route_options=next_screen)
 
     def create_variables(self):
-        for key, value in \
-                self.screen_content.get('create_ussd_variables', {}). \
-                        items():
-            self.ussd_request.session[key] = \
-                self.evaluate_jija_expression(value,
-                                              lazy_evaluating=True,
-                                              session=self.ussd_request.session
-                                              )
+        for key, value in self.screen_content.get("create_ussd_variables", {}).items():
+            self.ussd_request.session[key] = self.evaluate_jija_expression(
+                value, lazy_evaluating=True, session=self.ussd_request.session
+            )
 
     def set_language(self):
-        self.ussd_request.session['default_language'] = \
-            self.screen_content.get('default_language', 'en')
+        self.ussd_request.session["default_language"] = self.screen_content.get(
+            "default_language", "en"
+        )

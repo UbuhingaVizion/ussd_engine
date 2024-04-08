@@ -2,33 +2,36 @@
 For session store we will rely on
 https://pythonhosted.org/simplekv/#
 """
-from simplekv import KeyValueStore
-from simplekv.fs import FilesystemStore
+import base64
+import json
 import random
 import string
-import base64
-from datetime import datetime, timedelta
-import json
 from collections import OrderedDict
+from datetime import datetime, timedelta
+
+from simplekv import KeyValueStore
+from simplekv.fs import FilesystemStore
+
 from ussd import defaults as ussd_airflow_variables
 
-def get_random_string(length=12,
-                      allowed_chars='abcdefghijklmnopqrstuvwxyz'
-                                    'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'):
+
+def get_random_string(
+    length=12,
+    allowed_chars="abcdefghijklmnopqrstuvwxyz" "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+):
     """
     Return a securely generated random string.
 
     The default length of 12 with the a-z, A-Z, 0-9 character set returns
     a 71-bit value. log_2((26+26+10)^12) =~ 71 bits
     """
-    return ''.join(random.choice(allowed_chars) for i in range(length))
+    return "".join(random.choice(allowed_chars) for i in range(length))
 
 
-date_format = '%Y-%m-%dT%H:%M:%S.%f'
+date_format = "%Y-%m-%dT%H:%M:%S.%f"
 
 
 class CustomJsonEncoder(json.JSONEncoder):
-
     def default(self, obj):
         try:
             return json.JSONEncoder.default(self, obj)
@@ -41,8 +44,9 @@ class CustomJsonEncoder(json.JSONEncoder):
 def datetime_parser(dct):
     dct = OrderedDict(dct)
     if dct.get(ussd_airflow_variables.session_expiry):
-        dct[ussd_airflow_variables.session_expiry] = \
-            datetime.strptime(dct[ussd_airflow_variables.session_expiry], date_format)
+        dct[ussd_airflow_variables.session_expiry] = datetime.strptime(
+            dct[ussd_airflow_variables.session_expiry], date_format
+        )
     return dct
 
 
@@ -51,11 +55,12 @@ class JSONSerializer:
     Simple wrapper around json to be used in signing.dumps and
     signing.loads.
     """
+
     def dumps(self, obj):
-        return json.dumps(obj, separators=(',', ':'), cls=CustomJsonEncoder).encode('latin-1')
+        return json.dumps(obj, separators=(",", ":"), cls=CustomJsonEncoder).encode("latin-1")
 
     def loads(self, data):
-        return json.loads(data.decode('latin-1'), object_pairs_hook=datetime_parser)
+        return json.loads(data.decode("latin-1"), object_pairs_hook=datetime_parser)
 
 
 # session_key should not be case sensitive because some backends can store it
@@ -71,6 +76,7 @@ class CreateError(Exception):
     Used internally as a consistent exception type to catch from save (see the
     docstring for SessionBase.save() for details).
     """
+
     pass
 
 
@@ -81,12 +87,14 @@ class UpdateError(Exception):
 
 
 class SessionStore(object):
-
     __not_given = object()
 
-    def __init__(self, session_key=None,
-                 kv_store: KeyValueStore = None,
-                 default_session_cookie_age: int = SESSION_COOKIE_AGE):
+    def __init__(
+        self,
+        session_key=None,
+        kv_store: KeyValueStore = None,
+        default_session_cookie_age: int = SESSION_COOKIE_AGE,
+    ):
         if kv_store is None:
             kv_store = FilesystemStore("./.session_data")
         self._session_key = session_key
@@ -240,6 +248,7 @@ class SessionStore(object):
     _session_key = property(_get_session_key, _set_session_key)
     session_key = property(_get_session_key)
     _session = property(_get_session)
+    print(f"session key from get_session_key:{session_key}")
 
     def get_expiry_age(self, **kwargs):
         """Get the number of seconds until the session expires.
@@ -248,18 +257,18 @@ class SessionStore(object):
         arguments specifying the modification and expiry of the session.
         """
         try:
-            modification = kwargs['modification']
+            modification = kwargs["modification"]
         except KeyError:
             modification = datetime.now()
         # Make the difference between "expiry=None passed in kwargs" and
         # "expiry not passed in kwargs", in order to guarantee not to trigger
         # self.load() when expiry is provided.
         try:
-            expiry = kwargs['expiry']
+            expiry = kwargs["expiry"]
         except KeyError:
-            expiry = self.get('_session_expiry')
+            expiry = self.get("_session_expiry")
 
-        if not expiry:   # Checks both None and 0 cases
+        if not expiry:  # Checks both None and 0 cases
             return self.defaul_session_cookie_age
         if not isinstance(expiry, datetime):
             return expiry
@@ -273,18 +282,18 @@ class SessionStore(object):
         arguments specifying the modification and expiry of the session.
         """
         try:
-            modification = kwargs['modification']
+            modification = kwargs["modification"]
         except KeyError:
             modification = datetime.now()
         # Same comment as in get_expiry_age
         try:
-            expiry = kwargs['expiry']
+            expiry = kwargs["expiry"]
         except KeyError:
             expiry = self.get(ussd_airflow_variables.session_expiry)
 
         if isinstance(expiry, datetime):
             return expiry
-        expiry = expiry or SESSION_COOKIE_AGE   # Checks both None and 0 cases
+        expiry = expiry or SESSION_COOKIE_AGE  # Checks both None and 0 cases
         return modification + timedelta(seconds=expiry)
 
     def set_expiry(self, value):
@@ -305,7 +314,7 @@ class SessionStore(object):
         if value is None:
             # Remove any custom expiration for this session.
             try:
-                del self['_session_expiry']
+                del self["_session_expiry"]
             except KeyError:
                 pass
             return
