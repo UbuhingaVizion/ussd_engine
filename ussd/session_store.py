@@ -248,7 +248,6 @@ class SessionStore(object):
     _session_key = property(_get_session_key, _set_session_key)
     session_key = property(_get_session_key)
     _session = property(_get_session)
-    print(f"session key from get_session_key:{session_key}")
 
     def get_expiry_age(self, **kwargs):
         """Get the number of seconds until the session expires.
