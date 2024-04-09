@@ -140,7 +140,7 @@ test_invalid_jija_variable:
   items:
     text: Vege {{ item }}
     value: "{{ item }}"
-    with_items: "{%vegetables_list%}"
+    with_items: "{{vegetables_list}}"
     session_key: selected_vegetable
     next_screen: choose_quantity
 
