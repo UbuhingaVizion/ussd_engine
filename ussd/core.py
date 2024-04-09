@@ -11,6 +11,7 @@ from collections import namedtuple
 from copy import copy
 from urllib.parse import unquote
 
+import configure
 import requests
 from jinja2 import Environment
 from marshmallow.schema import SchemaMeta
@@ -401,6 +402,8 @@ class UssdHandlerAbstract(object, metaclass=UssdHandlerMetaClass):
     def get_text(self, text_context=None):
         text_context = self.screen_content.get("text") if text_context is None else text_context
 
+        if isinstance(text_context, configure.Configuration):
+            text_context = dict(text_context)
         if isinstance(text_context, dict):
             language = (
                 (self.ussd_request.session.get("override_language") or self.ussd_request.language)
@@ -748,7 +751,6 @@ class UssdEngine(object):
     @staticmethod
     def get_initial_screen(ussd_content: dict):
         initial_screen = ussd_content["initial_screen"]
-        print(f"ussd_content type:{ussd_content}")
         return (
             initial_screen
             if isinstance(initial_screen, dict)
