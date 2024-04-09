@@ -157,7 +157,7 @@ class InitialScreen(UssdHandlerAbstract):
                     self.initial_screen, self.ussd_request.session_id
                 )
         else:
-            next_screen = self.screen_content
+            raise TypeError("Initial_screen must be a dict")
         return self.route_options(route_options=next_screen)
 
     def create_variables(self):

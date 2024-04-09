@@ -711,9 +711,9 @@ class UssdEngine(object):
             is_valid = False
             errors.update({"hidden_fields": {"initial_screen": ["This field is required."]}})
         for screen_name, screen_content in ussd_content.items():
-            # Handle initial screen as a string or a dictionary
+            # Handle initial screen as a dictionary
             if screen_name == "initial_screen":
-                if isinstance(screen_content, str) or isinstance(screen_content, dict):
+                if isinstance(screen_content, dict):
                     if screen_content not in ussd_content:
                         is_valid = False
                         errors.update(dict(screen_name="Screen not available"))
