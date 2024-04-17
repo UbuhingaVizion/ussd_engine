@@ -9,8 +9,10 @@ structlog
 Jinja2
 PyYAML
 requests
-configure-fork
+# configure-fork
 attrs
 marshmallow
 celery
 PyStaticConfiguration
+
+git+https://github.com/UbuhingaVizion/configure.git@develop
