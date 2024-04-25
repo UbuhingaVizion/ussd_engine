@@ -177,6 +177,8 @@ class UssdRequest(object):
 
         # screen configs
         self.menu_index_format = kwargs.get("menu_index_format", ". ")
+        self.default_http_headers = kwargs.get("default_http_headers", {})
+        self.default_http_params = kwargs.get("default_http_params", {})
 
         for key, value in kwargs.items():
             if not hasattr(self, key):
@@ -531,20 +533,59 @@ class UssdHandlerAbstract(object, metaclass=UssdHandlerMetaClass):
         return response_varialbes
 
     @classmethod
-    def make_request(cls, http_request_conf, response_session_key_save, session, logger=None):
-        logger = logger or get_logger(__name__).bind(
-            action="make_request", session_id=session.session_key
-        )
-        logger.info("sending_request", **http_request_conf)
-        response = requests.request(**http_request_conf)
-        logger.info("response", status_code=response.status_code, content=response.content)
+    def make_request(
+        cls,
+        http_request_conf,
+        response_session_key_save,
+        session,
+        logger=None,
+        default_http_headers=None,
+        default_http_params=None,
+    ):
+        try:
+            logger = logger or get_logger(__name__).bind(
+                action="make_request", session_id=session.session_key
+            )
+            if default_http_headers is None:
+                default_http_headers = {}
 
-        response_to_save = cls.get_variables_from_response_obj(response)
+            if default_http_params is None:
+                default_http_params = {}
 
-        # save response in session
-        session[response_session_key_save] = response_to_save
+            # Use the default headers if given
+            # the headers given in the configurations must be prioritized
+            http_request_headers = http_request_conf.get("headers", {})
+            default_http_headers.update(http_request_headers)
+            if default_http_headers:
+                http_request_conf["headers"] = default_http_headers
 
-        return response
+            # Use the default params if given
+            # the params given in the configurations must be prioritized
+            http_request_params = http_request_conf.get("params", {})
+            default_http_params.update(http_request_params)
+            if default_http_params:
+                http_request_conf["params"] = default_http_params
+
+            logger.info("sending_request", **http_request_conf)
+
+            # Serialize the Configuration object before passing it to requests.request()
+            if "json" in http_request_conf and isinstance(
+                http_request_conf["json"], configure.Configuration
+            ):
+                http_request_conf["json"] = http_request_conf["json"].to_dict()
+
+            response = requests.request(**http_request_conf)
+            logger.info("response", status_code=response.status_code, content=response.content)
+
+            response_to_save = cls.get_variables_from_response_obj(response)
+
+            # save response in session
+            session[response_session_key_save] = response_to_save
+
+            return response
+        except Exception as e:
+            logger.error(f"Error making HTTP request: {e}")
+            raise e
 
     @staticmethod
     def fire_ussd_report_session_task(
