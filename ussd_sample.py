@@ -19,6 +19,7 @@ if __name__ == "__main__":
                 ussd_input=message,
                 language=language,
                 journey_name="main_ussd_journey",
+                default_http_headers={"Content-Type": "application/json"},
             )
 
             ussd_engine = UssdEngine(ussd_request=ussd_request)
