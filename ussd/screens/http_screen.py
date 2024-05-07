@@ -70,6 +70,13 @@ class HttpScreen(UssdHandlerAbstract):
             self.ussd_request.session, self.screen_content["http_request"]
         )
 
+        default_http_headers = self.render_request_conf(
+            self.ussd_request.session, self.ussd_request.default_http_headers
+        )
+        default_http_params = self.render_request_conf(
+            self.ussd_request.session, self.ussd_request.default_http_params
+        )
+
         if self.screen_content.get("synchronous", False):
             http_task.delay(request_conf=http_request_conf)
         else:
@@ -77,8 +84,8 @@ class HttpScreen(UssdHandlerAbstract):
                 http_request_conf=http_request_conf,
                 response_session_key_save=self.screen_content["session_key"],
                 session=self.ussd_request.session,
-                default_http_headers=self.ussd_request.default_http_headers or {},
-                default_http_params=self.ussd_request.default_http_params or {},
+                default_http_headers=default_http_headers or {},
+                default_http_params=default_http_params or {},
                 logger=self.logger,
             )
         return self.route_options()
