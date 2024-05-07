@@ -479,6 +479,10 @@ class UssdHandlerAbstract(object, metaclass=UssdHandlerMetaClass):
 
     @classmethod
     def render_request_conf(cls, session, data):
+        # Convert first the configure object / without else
+        if isinstance(data, configure.Configuration):
+            data = data.to_dict()
+
         if isinstance(data, str):
             jinja_results = cls.evaluate_jija_expression(data, session)
             return data if jinja_results is None else jinja_results
@@ -568,13 +572,27 @@ class UssdHandlerAbstract(object, metaclass=UssdHandlerMetaClass):
 
             logger.info("sending_request", **http_request_conf)
 
-            # Serialize the Configuration object before passing it to requests.request()
-            if "json" in http_request_conf and isinstance(
-                http_request_conf["json"], configure.Configuration
-            ):
-                http_request_conf["json"] = http_request_conf["json"].to_dict()
+            # Formatted configuration
+            formatted_http_request_conf = {}
 
-            response = requests.request(**http_request_conf)
+            # Serialize the Configuration object before passing it to requests.request()
+            for http_request_index, http_request_value in http_request_conf.items():
+                if isinstance(http_request_value, configure.Configuration):
+                    try:
+                        # Wrap to_dict in a try-except block to handle potential errors
+                        formatted_http_request_conf[http_request_index] = http_request_conf[
+                            http_request_index
+                        ].to_dict()
+                    except Exception as e:
+                        logger.error(f"Error converting Configuration to dict: {e}")
+                        # Handle error here (e.g., return an error response)
+                        raise e  # Re-raise the exception to propagate
+                else:
+                    formatted_http_request_conf[http_request_index] = http_request_value
+
+            # formatted_http_request_conf = self.evaluate_jija_expression(formatted_http_request_conf)
+
+            response = requests.request(**formatted_http_request_conf)
             logger.info("response", status_code=response.status_code, content=response.content)
 
             response_to_save = cls.get_variables_from_response_obj(response)
