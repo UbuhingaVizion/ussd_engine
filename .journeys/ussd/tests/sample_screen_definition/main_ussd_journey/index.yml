@@ -1,5 +1,53 @@
-initial_screen: example_of_quit_screen
+initial_screen:
+  type: initial_screen
+  next_screen: choose_meal
+  pagination_config:
+    ussd_text_limit: 90
+    more_option:
+      en: More
+    back_option:
+      en: Back
 
-example_of_quit_screen:
+choose_meal:
+  type: menu_screen
+  text: Choose your favourite meal
+  pagination_config:
+    ussd_text_limit: 90
+    more_option:
+      en: More
+    back_option:
+      en: Back
+  error_message: |
+    You have selected an invalid option. Try again.
+  options:
+    - text: food
+      next_screen: types_of_food
+    - text: fruits
+      next_screen: types_of_fruit
+    - text: drinks
+      next_screen: types_of_drinks
+    - text: vegetables
+      next_screen: types_of_vegetables
+    - text: test pagination
+      next_screen: test_text_prompt_pagination
+
+types_of_vegetables:
+  type: menu_screen
+  text: Choose one of the following vegetables
+  items:
+    text: "{{ item }}"
+    value: "{{ item }}"
+    with_items:
+      - Mushrooms
+      - Spinaches
+      - Carrots
+      - Broccolies
+      - Gingers
+      - Cucumbers
+    session_key: selected_vegetable
+    next_screen: exit
+
+exit:
   type: quit_screen
-  text: "Test getting variable from os environmen. {{TEST_VARIABLE}}"
+  text: >
+    You have selected "{{selected_vegetable}}" as vegetables!!!
