@@ -561,6 +561,8 @@ class UssdHandlerAbstract(object, metaclass=UssdHandlerMetaClass):
             http_request_headers = http_request_conf.get("headers", {})
             default_http_headers.update(http_request_headers)
             if default_http_headers:
+                # Convert all headers into string
+                default_http_headers = {k: str(v) for k, v in default_http_headers.items()}
                 http_request_conf["headers"] = default_http_headers
 
             # Use the default params if given
