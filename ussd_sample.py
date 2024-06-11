@@ -19,6 +19,7 @@ if __name__ == "__main__":
                 ussd_input=message,
                 language=language,
                 journey_name="main_ussd_journey",
+                # journey_version="index",
                 default_http_headers={"Content-Type": "application/json"},
             )
 
@@ -34,3 +35,4 @@ if __name__ == "__main__":
 
         except Exception as e:
             print("Error:", str(e))
+            is_last = True
